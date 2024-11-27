@@ -57,5 +57,7 @@ Options:
 ## Tips
 - Make sure the video you are using roughly matches the aspect-ratio of the target device. Otherwise large areas are cropped to fill the screen while keeping the aspect-ratio.
 - When using a prebuilt binary you may have to grant access in system settings
-    ![Alert](readme/alert.png)
-    ![Grant access in system settings](readme/grant_access.png)
+<div style="display: flex; justify-content: center; gap: 1rem;">
+    <img src="readme/alert.png" alt="alert" height="200"/>
+    <img src="readme/grant_access.png" alt="grant access in system settings" height="200"/>
+</div>
