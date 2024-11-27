@@ -19,7 +19,7 @@ Currently supported device frames:
     ```
 5. Run:
     ```
-    ./AppleDeviceMediaGenerator [OPTIONS] INPUT_PATH OUTPUT_PATH
+    ./AppleDeviceMediaGenerator.py [OPTIONS] INPUT_PATH
     ```
 
 ### Building from Source
@@ -38,20 +38,19 @@ Currently supported device frames:
     ```
 4. Run the tool:
     ```
-    dist/AppleDeviceMediaGenerator [OPTIONS] INPUT_PATH OUTPUT_PATH
+    dist/AppleDeviceMediaGenerator.py [OPTIONS] INPUT_PATH
     ```
 
 ## How to Use
 Refer to the help page: `AppleDeviceMediaGenerator --help`
 ```
-Usage: AppleDeviceMediaGenerator [OPTIONS] INPUT_PATH OUTPUT_PATH
+Usage: AppleDeviceMediaGenerator.py [OPTIONS] INPUT_PATH
 
-  INPUT_PATH is the path to the raw file e.g. a screen recording.
-
-  OUTPUT_PATH is the path to the produced file.
+  INPUT_PATH is the path to the raw file e.g. a screen recording or a
+  directory.
 
 Options:
-  --island / --no-island          Adds a dynamic island. Use this if the
+  -i, --island                    Adds a dynamic island. Use this if the
                                   screen recording does not include the notch
                                   / dynamic island. Default: --no-island.
   --device [iPhone-16-Pro|iPad-11-Pro|macbook-pro-14]
@@ -60,10 +59,25 @@ Options:
   --help                          Show this message and exit.
 ```
 
+### Examples
+Convert file.mp4 using the ipad pro frame.
+```
+    AppleDeviceMediaGenerator --device=iPad-11-pro file.mp4
+```
+Convert file.mp4 using the default iPhone 16 pro frame and add the dynamic island.
+```
+    AppleDeviceMediaGenerator --island file.mp4
+```
+Convert all files in the current directory using the default iPhone 16 pro frame.
+```
+    AppleDeviceMediaGenerator .
+```
+
 ## Tips
 - Make sure the video you are using roughly matches the aspect-ratio of the target device. Otherwise large areas are cropped to fill the screen while keeping the aspect-ratio.
+- For native compatibility with keynote, the output is encoded with Apple ProRes 4444. Keep this in mind, because file sizes can get very big.
 - When using a prebuilt binary you may have to grant access in system settings
-<div style="display: flex; justify-content: center; gap: 1rem;">
-    <img src="readme/alert.png" alt="alert" height="200"/>
-    <img src="readme/grant_access.png" alt="grant access in system settings" height="200"/>
+<div style="display: flex; justify-content: center; gap: 1rem; margin-inline: 1rem;">
+    <div><img src="readme/alert.png" alt="alert"/> </div>
+     <div><img src="readme/grant_access.png" alt="grant access in system settings"/> </div>
 </div>
