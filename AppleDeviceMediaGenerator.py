@@ -44,39 +44,14 @@ def calculate_size(current, target):
     return [round(dim * factor) for dim in current]
 
 
-@click.command()
-@click.argument("input_path", type=click.Path(exists=True, dir_okay=False))
-@click.argument("output_path", type=click.Path(dir_okay=False))
-@click.option(
-    "--island/--no-island",
-    default=False,
-    help="Adds a dynamic island. Use this if the screen recording does not include the notch / dynamic island. Default: --no-island.",
-)
-@click.option(
-    "--device",
-    required=True,
-    type=click.Choice(
-        ["iPhone-16-Pro", "iPad-11-Pro", "macbook-pro-14"], case_sensitive=False
-    ),
-    help="Device used for the frame and aspect ratio. Default: iPhone-16-Pro.",
-    default="iPhone-16-Pro",
-)
-def generate(device, input_path, output_path, island):
-    """
-    INPUT_PATH is the path to the raw file e.g. a screen recording. \n
-    OUTPUT_PATH is the path to the produced file.
-    """
-
-    # set content size and frame according to chosen device
-    (CONTENT_SIZE, frame_path, mask_path) = setup(device, island)
-
+def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
     # load inputs
-    original = ffmpeg.input(input_path)
+    original = ffmpeg.input(file_path)
     mask = ffmpeg.input(mask_path)
     frame = ffmpeg.input(frame_path)
 
     # probe original to precompute dimensions
-    probe = ffmpeg.probe(input_path)
+    probe = ffmpeg.probe(file_path)
     video_stream = next(
         (stream for stream in probe["streams"] if stream["codec_type"] == "video"), None
     )
@@ -112,14 +87,53 @@ def generate(device, input_path, output_path, island):
     (
         ffmpeg.filter([original, mask], "alphamerge")
         .overlay(frame)
-        .output(
-            output_path,
-            vcodec="prores_ks",
-        )
+        .output(output_path, vcodec="qtrle", pix_fmt="rgba")
         .overwrite_output()
         .run()
     )
 
 
+@click.command()
+@click.argument("input_path", type=click.Path())
+@click.option(
+    "-i",
+    "--island",
+    is_flag=True,
+    default=False,
+    help="Adds a dynamic island. Use this if the screen recording does not include the notch / dynamic island. Default: --no-island.",
+)
+@click.option(
+    "--device",
+    required=True,
+    type=click.Choice(
+        ["iPhone-16-Pro", "iPad-11-Pro", "macbook-pro-14"], case_sensitive=False
+    ),
+    help="Device used for the frame and aspect ratio. Default: iPhone-16-Pro.",
+    default="iPhone-16-Pro",
+)
+def main(device, input_path, island):
+    """
+    INPUT_PATH is the path to the raw file e.g. a screen recording or a directory. \n
+    """
+
+    # set content size and frame according to chosen device
+    (CONTENT_SIZE, frame_path, mask_path) = setup(device, island)
+
+    if os.path.isfile(input_path):
+        output_path = os.path.splitext(input_path)[0] + "_output.mov"
+        generate(input_path, output_path, CONTENT_SIZE, frame_path, mask_path)
+    elif os.path.isdir(input_path):
+        for filename in os.listdir(input_path):
+            if not filename.lower().endswith((".mp4", ".mov", ".avi")):
+                continue
+            if os.splitext(filename)[0].endswith("_output"):
+                continue
+            file_path = os.path.join(input_path, filename)
+            output_path = os.path.splitext(file_path)[0] + "_output.mov"
+            generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path)
+    else:
+        click.echo("Invalid input. Provide a valid file or directory.")
+
+
 if __name__ == "__main__":
-    generate()
+    main()
