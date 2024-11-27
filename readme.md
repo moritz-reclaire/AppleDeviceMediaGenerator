@@ -7,7 +7,11 @@ AppleDeviceMediaGenerator is a command line tool designed to generate media asse
 1. Download the latest binary from the [Releases](https://github.com/moritz-reclaire/AppleDeviceMediaGenerator/releases) page.
 2. Extract the downloaded file.
 3. Open your terminal and navigate to the directory containing the binary.
-4. Run:
+4. Make executable
+    ```
+    chmod +x AppleDeviceMediaGenerator
+    ```
+5. Run:
     ```
     ./AppleDeviceMediaGenerator [OPTIONS] INPUT_PATH OUTPUT_PATH
     ```
@@ -49,3 +53,9 @@ Options:
                                   Default: iPhone-16-Pro.  [required]
   --help                          Show this message and exit.
 ```
+
+## Tips
+- Make sure the video you are using roughly matches the aspect-ratio of the target device. Otherwise large areas are cropped to fill the screen while keeping the aspect-ratio.
+- When using a prebuilt binary you may have to grant access in system settings
+    ![Alert](readme/alert.png)
+    ![Grant access in system settings](readme/grant_access.png)
