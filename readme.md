@@ -2,6 +2,12 @@
 
 AppleDeviceMediaGenerator is a command line tool designed to generate media assets for presentations. It converts videos such as screen recordings into presentable versions including the border of the selected apple device and includes a transparent background.
 
+Currently supported device frames:
+- iPhone 16 Pro
+- iPad Pro 11in
+- macbook Pro 14in
+
+
 ### Using Binary from Releases
 
 1. Download the latest binary from the [Releases](https://github.com/moritz-reclaire/AppleDeviceMediaGenerator/releases) page.
