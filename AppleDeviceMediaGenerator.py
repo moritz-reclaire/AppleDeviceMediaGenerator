@@ -126,7 +126,7 @@ def main(device, input_path, island):
         for filename in os.listdir(input_path):
             if not filename.lower().endswith((".mp4", ".mov", ".avi")):
                 continue
-            if os.splitext(filename)[0].endswith("_output"):
+            if os.path.splitext(filename)[0].endswith("_output"):
                 continue
             file_path = os.path.join(input_path, filename)
             output_path = os.path.splitext(file_path)[0] + "_output.mov"
