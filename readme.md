@@ -53,6 +53,7 @@ Options:
   -i, --island                    Adds a dynamic island. Use this if the
                                   screen recording does not include the notch
                                   / dynamic island. Default: --no-island.
+  -w, --width INTEGER             The horizontal resolution of the output.
   --device [iPhone-16-Pro|iPad-11-Pro|macbook-pro-14]
                                   Device used for the frame and aspect ratio.
                                   Default: iPhone-16-Pro.  [required]
@@ -68,14 +69,14 @@ Convert file.mp4 using the default iPhone 16 pro frame and add the dynamic islan
 ```
     AppleDeviceMediaGenerator --island file.mp4
 ```
-Convert all files in the current directory using the default iPhone 16 pro frame.
+Convert all files in the current directory using the default iPhone 16 pro frame and slighter higher than default horizontal resolution of 600.
 ```
-    AppleDeviceMediaGenerator .
+    AppleDeviceMediaGenerator -w 600 .
 ```
 
 ## Tips
 - Make sure the video you are using roughly matches the aspect-ratio of the target device. Otherwise large areas are cropped to fill the screen while keeping the aspect-ratio.
-- For native compatibility with keynote, the output is encoded with Apple ProRes 4444. Keep this in mind, because file sizes can get very big.
+- For native compatibility with keynote, the output is encoded with Apple ProRes 4444. Keep this in mind, because file sizes can get very big. You can balance file size and quality with the `--width` option.
 - When using a prebuilt binary you may have to grant access in system settings
 <div style="display: flex; justify-content: center; gap: 1rem; margin-inline: 1rem;">
     <div><img src="readme/alert.png" alt="alert"/> </div>

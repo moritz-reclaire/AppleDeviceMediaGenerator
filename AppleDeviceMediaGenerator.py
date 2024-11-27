@@ -44,10 +44,10 @@ def calculate_size(current, target):
     return [round(dim * factor) for dim in current]
 
 
-def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
+def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolution_h):
     # load inputs
     original = ffmpeg.input(file_path)
-    mask = ffmpeg.input(mask_path)
+    mask = ffmpeg.input(mask_path).filter("scale", resolution_h, -1)
     frame = ffmpeg.input(frame_path)
 
     # probe original to precompute dimensions
@@ -82,11 +82,12 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
             (frame_size[0] - CONTENT_SIZE[0]) / 2,
             (frame_size[1] - CONTENT_SIZE[1]) / 2,
         )
+        .filter("scale", resolution_h, -1)
     )
 
     (
         ffmpeg.filter([original, mask], "alphamerge")
-        .overlay(frame)
+        .overlay(frame.filter("scale", resolution_h, -1))
         .output(output_path, vcodec="prores_ks")
         .overwrite_output()
         .run()
@@ -103,6 +104,13 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
     help="Adds a dynamic island. Use this if the screen recording does not include the notch / dynamic island. Default: --no-island.",
 )
 @click.option(
+    "-w",
+    "--width",
+    type=int,
+    default=500,
+    help="The horizontal resolution of the output.",
+)
+@click.option(
     "--device",
     required=True,
     type=click.Choice(
@@ -111,7 +119,7 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
     help="Device used for the frame and aspect ratio. Default: iPhone-16-Pro.",
     default="iPhone-16-Pro",
 )
-def main(device, input_path, island):
+def main(device, input_path, island, width):
     """
     INPUT_PATH is the path to the raw file e.g. a screen recording or a directory. \n
     """
@@ -121,7 +129,7 @@ def main(device, input_path, island):
 
     if os.path.isfile(input_path):
         output_path = os.path.splitext(input_path)[0] + "_output.mov"
-        generate(input_path, output_path, CONTENT_SIZE, frame_path, mask_path)
+        generate(input_path, output_path, CONTENT_SIZE, frame_path, mask_path, width)
     elif os.path.isdir(input_path):
         for filename in os.listdir(input_path):
             if not filename.lower().endswith((".mp4", ".mov", ".avi")):
@@ -130,7 +138,7 @@ def main(device, input_path, island):
                 continue
             file_path = os.path.join(input_path, filename)
             output_path = os.path.splitext(file_path)[0] + "_output.mov"
-            generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path)
+            generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, width)
     else:
         click.echo("Invalid input. Provide a valid file or directory.")
 
