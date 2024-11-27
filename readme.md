@@ -44,7 +44,7 @@ Currently supported device frames:
 ## How to Use
 Refer to the help page: `AppleDeviceMediaGenerator --help`
 ```
-Usage: AppleDeviceMediaGenerator [OPTIONS] INPUT_PATH
+Usage: AppleDeviceMediaGenerator.py [OPTIONS] INPUT_PATH
 
   INPUT_PATH is the path to the raw file e.g. a screen recording or a
   directory.
@@ -54,7 +54,7 @@ Options:
                                   screen recording does not include the notch
                                   / dynamic island. Default: --no-island.
   -b, --background                Adds a white background to reduce the file
-                                  size. (Currently only supported for iPhone)
+                                  size.
   -w, --width INTEGER             The horizontal resolution of the output. Is
                                   ignored when background flag is set.
   --device [iPhone-16-Pro|iPad-11-Pro|macbook-pro-14]
@@ -79,7 +79,7 @@ Convert all files in the current directory using the default iPhone 16 pro frame
 
 ## Tips
 - Make sure the video you are using roughly matches the aspect-ratio of the target device. Otherwise large areas are cropped to fill the screen while keeping the aspect-ratio.
-- For native compatibility with keynote, the output is encoded with Apple ProRes 4444. Keep this in mind, because file sizes can get very big. You can balance file size and quality with the `--width` option or add a background with `-background`.
+- For native compatibility with keynote, the output is encoded with Apple ProRes 4444. Keep this in mind, because file sizes can get very big. You can balance file size and quality with the `--width` option or add a background with `--background`.
 - When using a prebuilt binary you may have to grant access in system settings
 <div style="display: flex; justify-content: center; gap: 1rem; margin-inline: 1rem;">
     <div><img src="readme/alert.png" alt="alert"/> </div>

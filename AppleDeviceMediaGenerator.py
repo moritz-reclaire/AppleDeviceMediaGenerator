@@ -2,6 +2,7 @@ import click
 import ffmpeg
 import os
 import sys
+import math
 
 # data for .spec file
 # ('iphone/*.png', 'iphone'),
@@ -34,12 +35,18 @@ def setup(device, island, background):
                 frame_path = p("iphone/frame_iPhone-16-pro.png")
     elif device == "iPad-11-Pro":
         CONTENT_SIZE = [1310, 1898]
-        frame_path = p("ipad/frame_iPad-11-pro.png")
         mask_path = p("ipad/mask_iPad-11-pro.png")
+        if background:
+            frame_path = p("ipad/frame_iPad-11-pro-background.png")
+        else:
+            frame_path = p("ipad/frame_iPad-11-pro.png")
     elif device == "macbook-pro-14":
         CONTENT_SIZE = [2504, 1628]
-        frame_path = p("mac/frame_macbook-pro-14.png")
         mask_path = p("mac/mask_macbook-pro-14.png")
+        if background:
+            frame_path = p("mac/frame_macbook-pro-14-background.png")
+        else:
+            frame_path = p("mac/frame_macbook-pro-14.png")
     return (CONTENT_SIZE, frame_path, mask_path)
 
 
@@ -51,11 +58,19 @@ def calculate_size(current, target):
 
 
 def generate(
-    file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolution_h, codec
+    file_path,
+    output_path,
+    CONTENT_SIZE,
+    frame_path,
+    mask_path,
+    resolution_h,
+    background,
+    codec,
 ):
+
     # load inputs
     original = ffmpeg.input(file_path)
-    mask = ffmpeg.input(mask_path).filter("scale", resolution_h, -1)
+    mask = ffmpeg.input(mask_path)
     frame = ffmpeg.input(frame_path)
 
     # probe original to precompute dimensions
@@ -71,6 +86,18 @@ def generate(
         (stream for stream in probe["streams"] if stream["codec_type"] == "video"), None
     )
     frame_size = [video_stream["width"], video_stream["height"]]
+
+    # overwrite width in case of background
+    if background:
+        resolution_h = 1000
+    if resolution_h == -1:
+        # default resolution_h is half of framewidth
+        resolution_h = frame_size[0] // 2
+
+    # update mask
+    mask = mask.filter("scale", resolution_h, -1).filter(
+        "pad", "ceil(iw/2)*2", "ceil(ih/2)*2"
+    )
 
     # compute target size
     [width, height] = calculate_size(original_size, CONTENT_SIZE)
@@ -91,11 +118,16 @@ def generate(
             (frame_size[1] - CONTENT_SIZE[1]) / 2,
         )
         .filter("scale", resolution_h, -1)
+        .filter("pad", "ceil(iw/2)*2", "ceil(ih/2)*2")
     )
 
     (
         ffmpeg.filter([original, mask], "alphamerge")
-        .overlay(frame.filter("scale", resolution_h, -1))
+        .overlay(
+            frame.filter("scale", resolution_h, -1).filter(
+                "pad", "ceil(iw/2)*2", "ceil(ih/2)*2"
+            )
+        )
         .output(output_path, vcodec=codec)
         .overwrite_output()
         .run()
@@ -116,13 +148,13 @@ def generate(
     "--background",
     is_flag=True,
     default=False,
-    help="Adds a white background to reduce the file size. (Currently only supported for iPhone)",
+    help="Adds a white background to reduce the file size.",
 )
 @click.option(
     "-w",
     "--width",
     type=int,
-    default=500,
+    default=-1,
     help="The horizontal resolution of the output. Is ignored when background flag is set.",
 )
 @click.option(
@@ -138,9 +170,6 @@ def main(device, input_path, island, width, background):
     """
     INPUT_PATH is the path to the raw file e.g. a screen recording or a directory. \n
     """
-    # overwrite width in case of background
-    if background:
-        width = 1000
 
     # set content size and frame according to chosen device
     (CONTENT_SIZE, frame_path, mask_path) = setup(device, island, background)
@@ -154,7 +183,14 @@ def main(device, input_path, island, width, background):
     if os.path.isfile(input_path):
         output_path = os.path.splitext(input_path)[0] + "_output.mov"
         generate(
-            input_path, output_path, CONTENT_SIZE, frame_path, mask_path, width, codec
+            input_path,
+            output_path,
+            CONTENT_SIZE,
+            frame_path,
+            mask_path,
+            width,
+            background,
+            codec,
         )
     elif os.path.isdir(input_path):
         for filename in os.listdir(input_path):
@@ -171,6 +207,7 @@ def main(device, input_path, island, width, background):
                 frame_path,
                 mask_path,
                 width,
+                background,
                 codec,
             )
     else:
