@@ -87,7 +87,7 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path):
     (
         ffmpeg.filter([original, mask], "alphamerge")
         .overlay(frame)
-        .output(output_path, vcodec="qtrle", pix_fmt="rgba")
+        .output(output_path, vcodec="prores_ks")
         .overwrite_output()
         .run()
     )
