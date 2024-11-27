@@ -18,14 +18,20 @@ def p(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-def setup(device, island):
+def setup(device, island, background):
     if device == "iPhone-16-Pro":
         CONTENT_SIZE = [884, 1918]
         mask_path = p("iphone/mask_iPhone-16-pro.png")
         if island:
-            frame_path = p("iphone/frame_iPhone-16-pro-island.png")
+            if background:
+                frame_path = p("iphone/frame_iPhone-16-pro-island-background.png")
+            else:
+                frame_path = p("iphone/frame_iPhone-16-pro-island.png")
         else:
-            frame_path = p("iphone/frame_iPhone-16-pro.png")
+            if background:
+                frame_path = p("iphone/frame_iPhone-16-pro-background.png")
+            else:
+                frame_path = p("iphone/frame_iPhone-16-pro.png")
     elif device == "iPad-11-Pro":
         CONTENT_SIZE = [1310, 1898]
         frame_path = p("ipad/frame_iPad-11-pro.png")
@@ -44,7 +50,9 @@ def calculate_size(current, target):
     return [round(dim * factor) for dim in current]
 
 
-def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolution_h):
+def generate(
+    file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolution_h, codec
+):
     # load inputs
     original = ffmpeg.input(file_path)
     mask = ffmpeg.input(mask_path).filter("scale", resolution_h, -1)
@@ -88,7 +96,7 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolu
     (
         ffmpeg.filter([original, mask], "alphamerge")
         .overlay(frame.filter("scale", resolution_h, -1))
-        .output(output_path, vcodec="prores_ks")
+        .output(output_path, vcodec=codec)
         .overwrite_output()
         .run()
     )
@@ -104,11 +112,18 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolu
     help="Adds a dynamic island. Use this if the screen recording does not include the notch / dynamic island. Default: --no-island.",
 )
 @click.option(
+    "-b",
+    "--background",
+    is_flag=True,
+    default=False,
+    help="Adds a white background to reduce the file size. (Currently only supported for iPhone)",
+)
+@click.option(
     "-w",
     "--width",
     type=int,
     default=500,
-    help="The horizontal resolution of the output.",
+    help="The horizontal resolution of the output. Is ignored when background flag is set.",
 )
 @click.option(
     "--device",
@@ -119,17 +134,28 @@ def generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, resolu
     help="Device used for the frame and aspect ratio. Default: iPhone-16-Pro.",
     default="iPhone-16-Pro",
 )
-def main(device, input_path, island, width):
+def main(device, input_path, island, width, background):
     """
     INPUT_PATH is the path to the raw file e.g. a screen recording or a directory. \n
     """
+    # overwrite width in case of background
+    if background:
+        width = 1000
 
     # set content size and frame according to chosen device
-    (CONTENT_SIZE, frame_path, mask_path) = setup(device, island)
+    (CONTENT_SIZE, frame_path, mask_path) = setup(device, island, background)
+
+    # set codec
+    if background:
+        codec = "libx264"
+    else:
+        codec = "prores_ks"
 
     if os.path.isfile(input_path):
         output_path = os.path.splitext(input_path)[0] + "_output.mov"
-        generate(input_path, output_path, CONTENT_SIZE, frame_path, mask_path, width)
+        generate(
+            input_path, output_path, CONTENT_SIZE, frame_path, mask_path, width, codec
+        )
     elif os.path.isdir(input_path):
         for filename in os.listdir(input_path):
             if not filename.lower().endswith((".mp4", ".mov", ".avi")):
@@ -138,7 +164,15 @@ def main(device, input_path, island, width):
                 continue
             file_path = os.path.join(input_path, filename)
             output_path = os.path.splitext(file_path)[0] + "_output.mov"
-            generate(file_path, output_path, CONTENT_SIZE, frame_path, mask_path, width)
+            generate(
+                file_path,
+                output_path,
+                CONTENT_SIZE,
+                frame_path,
+                mask_path,
+                width,
+                codec,
+            )
     else:
         click.echo("Invalid input. Provide a valid file or directory.")
 
