@@ -4,7 +4,7 @@ AppleDeviceMediaGenerator is a command line tool designed to generate media asse
 
 ### Using Binary from Releases
 
-1. Download the latest binary from the [Releases](https://github.com/your-repo/AppleDeviceMediaGenerator/releases) page.
+1. Download the latest binary from the [Releases](https://github.com/moritz-reclaire/AppleDeviceMediaGenerator/releases) page.
 2. Extract the downloaded file.
 3. Open your terminal and navigate to the directory containing the binary.
 4. Run:
